@@ -116,4 +116,122 @@ public class MVCBoardDAO extends DBConnPool {
 		}
 		return result;
 	}
+	
+	//열람 기능 : 게시물의 일련번호를 매개변수로 받음
+	public MVCBoardDTO selectView(String idx) {
+		//레코드 저장을 위해 DTO 인스턴스 생성
+		MVCBoardDTO dto = new MVCBoardDTO();
+		/*
+		게시물 조회시 작성자의 이름까지 출력하기 위해 member 테이블과 
+		내부 조인으로 게시물 인출
+		 */
+		String query = "SELECT Bo.*, Me.name FROM mvcboard Bo "
+				+ " INNER JOIN member Me ON Bo.id=Me.id"
+				+ " WHERE idx=?";
+		try {
+			//쿼리문 실행
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, idx);
+			rs = psmt.executeQuery();
+			/*
+			조건에 맞는 레코드가 있는 경우라면 next()를 실행했을때 true가 반환된다.
+			만약 레코드가 없다면 false를 반환하게 된다.
+			즉 레코드를 인출하는 쿼리문을 실행했을때는 반드시 조건문을 통해 next()함수가 실행된다.
+			 */
+			if(rs.next()) {
+				dto.setIdx(rs.getString(1));
+				dto.setId(rs.getString(2));
+				dto.setTitle(rs.getString(3));
+				dto.setContent(rs.getString(4));
+				dto.setPostdate(rs.getDate(5));
+				dto.setOfile(rs.getString(6));
+				dto.setSfile(rs.getString(7));
+				dto.setDowncount(rs.getInt(8));
+				dto.setVisitcount(rs.getInt(9));
+				dto.setName(rs.getString(10));
+			}
+		}
+		catch (Exception e) {
+			System.out.println("게시물 상세보기 중 예외 발생");
+			e.printStackTrace();
+		}
+		//DTO인스턴스 반환
+		return dto;		
+	}
+	
+	//게시물 조회수 증가
+	public void updateVisitCount(String idx) {
+		//visitcount 컬럼의 값을 1 증가시킨다.
+		String query = "UPDATE mvcboard SET"
+				+ " visitcount=visitcount+1 "
+				+ " WHERE idx=?";
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, idx);
+			rs = psmt.executeQuery();
+		}
+		catch (Exception e) {
+			System.out.println("게시물 조회수 증가 중 예외 발생");
+			e.printStackTrace();
+		}
+	}
+	
+	public void downCountPlud(String idx) {
+		String query = "UPDATE mvcboard SET"
+				+ " downcount=downcount+1 "
+				+ " WHERE idx=?";
+		try {
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, idx);
+			rs = psmt.executeQuery();
+		}
+		catch (Exception e) {
+			System.out.println("게시물 다운로드수 증가 중 예외 발생");
+			e.printStackTrace();
+		}
+	}
+	
+	//지정한 일련번호의 게시물 삭제
+	public int deletePost(String idx) {
+		int result = 0;
+		try {
+			//인파라미터가 있는 delete 쿼리문 작성
+			String query = "DELETE FROM mvcboard WHERE idx=?";
+			//인파라미터 세팅 후 쿼리문 실행
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, idx);
+			//삭제 성공시 1, 실패시 0 반환
+			result = psmt.executeUpdate();
+		}
+		catch (Exception e) {
+			System.out.println("게시물 삭제 중 예외 발생");
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	public int updatePost(MVCBoardDTO dto) {
+		int result = 0;
+		try {
+			
+			String query = "UPDATE mvcboard "
+					+ "SET title=?, content=?, ofile=?, sfile=?"
+					+ " WHERE idx=? and id=?";
+			//인파라미터 세팅 후 쿼리문 실행
+			psmt = con.prepareStatement(query);
+			psmt.setString(1, dto.getTitle());
+			psmt.setString(2, dto.getContent());
+			psmt.setString(3, dto.getOfile());
+			psmt.setString(4, dto.getSfile());
+			psmt.setString(5, dto.getIdx());
+			psmt.setString(6, dto.getId());
+
+			result = psmt.executeUpdate();
+		}
+		catch (Exception e) {
+			System.out.println("게시물 삭제 중 예외 발생");
+			e.printStackTrace();
+		}
+		return result;
+	}
 }
